@@ -12,7 +12,7 @@ sealed class Screen(
     val label: String,
     val icon: ImageVector
 ) {
-    object Dashboard : Screen("dashboard", "Dashboard", Icons.Outlined.BarChart)
+    object Dashboard : Screen("dashboard", "Resumen", Icons.Outlined.BarChart)
     object Expenses : Screen("expenses", "Gastos", Icons.Outlined.ReceiptLong)
     object Chat : Screen("chat", "Chat IA", Icons.Outlined.ChatBubbleOutline)
     object Import : Screen("import", "Importar", Icons.Outlined.FileUpload)

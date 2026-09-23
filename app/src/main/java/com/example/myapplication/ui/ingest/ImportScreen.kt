@@ -38,8 +38,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
@@ -78,6 +83,8 @@ private val hardcodedPreview = listOf(
 
 @Composable
 fun ImportScreen() {
+    var fileSelected by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,9 +92,8 @@ fun ImportScreen() {
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
-        // Badge INGESTA • OFFLINE FIRST
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
                 shape = RoundedCornerShape(999.dp),
@@ -123,7 +129,7 @@ fun ImportScreen() {
         Spacer(Modifier.height(14.dp))
 
         Text(
-            text = "Importar Movimientos",
+            text = "Cargá tu extracto",
             style = MaterialTheme.typography.headlineLarge,
             color = OnSurface
         )
@@ -131,14 +137,14 @@ fun ImportScreen() {
         Spacer(Modifier.height(6.dp))
 
         Text(
-            text = "Carga tus extractos bancarios o planillas para categorizarlos y analizarlos con IA localmente mediante Room.",
+            text = "Seleccioná un extracto bancario o planilla para categorizarlo y analizarlo con IA en tu dispositivo.",
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary
         )
 
         Spacer(Modifier.height(24.dp))
 
-        LocalFileCard()
+        LocalFileCard(onFileSelected = { fileSelected = true })
 
         Spacer(Modifier.height(12.dp))
 
@@ -148,16 +154,18 @@ fun ImportScreen() {
 
         CameraCard()
 
-        Spacer(Modifier.height(28.dp))
-
-        DataPreviewSection()
-
-        Spacer(Modifier.height(24.dp))
+        if (fileSelected) {
+            Spacer(Modifier.height(28.dp))
+            DataPreviewSection(onCancel = { fileSelected = false })
+            Spacer(Modifier.height(24.dp))
+        } else {
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 
 @Composable
-private fun LocalFileCard() {
+private fun LocalFileCard(onFileSelected: () -> Unit) {
     val dashedColor = Border
 
     Card(
@@ -196,10 +204,11 @@ private fun LocalFileCard() {
 
             Spacer(Modifier.height(14.dp))
 
-            // Zona tappable — abre el selector de archivos
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onFileSelected() }
                     .drawBehind {
                         drawRoundRect(
                             color = dashedColor,
@@ -210,7 +219,6 @@ private fun LocalFileCard() {
                             )
                         )
                     }
-                    .clickable { }
                     .padding(vertical = 28.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -283,22 +291,27 @@ private fun CameraCard() {
         border = BorderStroke(1.dp, Border.copy(alpha = 0.3f))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Outlined.CameraAlt, null, tint = TextDisabled, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Icon(Icons.Outlined.CameraAlt, null, tint = TextDisabled, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Escanear con cámara",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextDisabled,
+                modifier = Modifier.weight(1f)
+            )
+            Surface(
+                shape = RoundedCornerShape(999.dp),
+                color = TextDisabled.copy(alpha = 0.1f)
+            ) {
                 Text(
-                    "Escanear con cámara (ML Kit)",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = TextDisabled
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Próximamente — Fase 2: Procesamiento OCR en dispositivo con ML Kit Vision.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextDisabled
+                    "Fase 2",
+                    color = TextDisabled,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                 )
             }
         }
@@ -306,7 +319,7 @@ private fun CameraCard() {
 }
 
 @Composable
-private fun DataPreviewSection() {
+private fun DataPreviewSection(onCancel: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Outlined.TableChart, null, tint = FiscalGreen, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
@@ -340,7 +353,6 @@ private fun DataPreviewSection() {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // File info row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Description, null, tint = FiscalGreen, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(10.dp))
@@ -389,7 +401,6 @@ private fun DataPreviewSection() {
             HorizontalDivider(color = Border)
             Spacer(Modifier.height(12.dp))
 
-            // Schema verified
             Row(verticalAlignment = Alignment.Top) {
                 Icon(
                     Icons.Outlined.CheckCircle,
@@ -406,7 +417,7 @@ private fun DataPreviewSection() {
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        "Estructura de columnas validada correctamente. Listo para persistir en SQLite Room sin colisiones.",
+                        "Estructura de columnas validada. Listo para guardar en el dispositivo.",
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -417,7 +428,6 @@ private fun DataPreviewSection() {
 
     Spacer(Modifier.height(16.dp))
 
-    // Confirm button
     Button(
         onClick = { },
         modifier = Modifier
@@ -432,7 +442,7 @@ private fun DataPreviewSection() {
         Icon(Icons.Outlined.CheckCircle, null, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
         Text(
-            "Confirmar e Importar 64 Registros",
+            "Confirmar e importar 64 registros",
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp
         )
@@ -441,11 +451,11 @@ private fun DataPreviewSection() {
     Spacer(Modifier.height(8.dp))
 
     TextButton(
-        onClick = { },
+        onClick = { onCancel() },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            "Cancelar o cambiar archivo",
+            "Cancelar y cambiar archivo",
             color = TextSecondary,
             fontSize = 14.sp
         )
